@@ -65,7 +65,7 @@ class CNN:
         return output_X
     
     
-    def Backward_pass(self,dl_do):
+    def Backward_pass(self,dl_do,lr = 0.001):
         
         filt = self.filter
         b = self.b
@@ -110,6 +110,12 @@ class CNN:
                         
             if(p!=0): dl_dx[i, :, :, :] = dl_dx_img[p:-p, p:-p, :]
             else: dl_dx[i, :, :, :] = dl_dx_img[:, :, :]
+            
+            filt = filt - lr*dl_df
+            b = b - lr*db
+            
+            self.filt = filt
+            self.b = b
             
         print("Backprop input = {}  Backprop output = {}".format(dl_do.shape,dl_dx.shape))
         return dl_dx

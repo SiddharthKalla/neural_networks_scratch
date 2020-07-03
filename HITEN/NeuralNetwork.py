@@ -31,6 +31,7 @@ class NeuralNetwork:
         
         self.model = model
         self.activation_outputs = None
+        self.x = None
     
     def forward(self,x):
         
@@ -39,19 +40,24 @@ class NeuralNetwork:
         
         z1 = np.dot(x,W1) + b1
         a1 = np.tanh(z1) 
+        print("Input shape = {} Output shape = {}".format(x.shape,a1.shape))
         
         z2 = np.dot(a1,W2) + b2
         a2 = np.tanh(z2)
+        print("Input shape = {} Output shape = {}".format(a1.shape,a2.shape))
         
         z3 = np.dot(a2,W3) + b3
         y_ = softmax(z3)
+        print("Input shape = {} Output shape = {}".format(a2.shape,y_.shape))
         
+        self.x = x
         self.activation_outputs = (a1,a2,y_)
         return y_
         
-    def backward(self,x,y,learning_rate=0.001):
+    def backward(self,y,learning_rate=0.001):
         W1,W2,W3 = self.model['W1'],self.model['W2'],self.model['W3']
         b1, b2, b3 = self.model['b1'],self.model['b2'],self.model['b3']
+        x = self.x
         m = x.shape[0]
         
         a1,a2,y_ = self.activation_outputs
@@ -65,7 +71,7 @@ class NeuralNetwork:
         db2 = np.sum(delta2,axis=0)
         
         delta1 = (1-np.square(a1))*np.dot(delta2,W2.T)
-        dw1 = np.dot(X.T,delta1)
+        dw1 = np.dot(x.T,delta1)
         db1 = np.sum(delta1,axis=0)
         
         
@@ -79,7 +85,7 @@ class NeuralNetwork:
         self.model["W3"]  -= learning_rate*dw3
         self.model['b3']  -= learning_rate*db3
         
-        # :)
+        return np.dot(delta1,W1.T)
         
     def predict(self,x):
         y_out = self.forward(x)
