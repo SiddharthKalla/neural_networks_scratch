@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[7]:
-
-
 import mnist
 import numpy as np
 from conv import Conv3x3
@@ -101,10 +95,3 @@ for im, label in zip(test_images, test_labels):
 num_tests = len(test_images)
 print('Test Loss:', loss / num_tests)
 print('Test Accuracy:', num_correct / num_tests)
-
-
-# In[ ]:
-
-
-
-
