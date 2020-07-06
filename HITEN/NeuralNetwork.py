@@ -31,7 +31,6 @@ class NeuralNetwork:
         
         self.model = model
         self.activation_outputs = None
-        self.x = None
     
     def forward(self,x):
         
@@ -54,10 +53,9 @@ class NeuralNetwork:
         self.activation_outputs = (a1,a2,y_)
         return y_
         
-    def backward(self,y,learning_rate=0.001):
+    def backward(self,x,y,learning_rate=0.001):
         W1,W2,W3 = self.model['W1'],self.model['W2'],self.model['W3']
         b1, b2, b3 = self.model['b1'],self.model['b2'],self.model['b3']
-        x = self.x
         m = x.shape[0]
         
         a1,a2,y_ = self.activation_outputs

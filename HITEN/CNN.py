@@ -12,27 +12,33 @@ import numpy as np
 
 class CNN:
     
-    def __init__(self , n_f , f = 3 , stride = 1 , padding = 'same'):
+    def __init__(self , n_f , f = 3 , stride = 1 , padding = 'same',ep = 0):
         
         self.filter = None
         self.b = None
-        self.X = None
         self.padding = padding
         self.stride = stride
         self.n_f = n_f
         self.f = f
+        self.ep = ep
     
     def Forward_pass(self,input_X):
         
-        self.X = input_X
         padding = self.padding
         stride = self.stride
         n_f = self.n_f                                            # No of filters
         f = self.f                                                # size of Filter 
-
+        ep = self.ep
+        
         (m,h,w,c) = input_X.shape                                 # size = ( m , h , w , c)
-        filt = np.random.randn(f,f,c,n_f)                         # size = ( f , f , c , n_f)
-        b = np.random.randn(1,1,1,n_f)
+        if(ep==0):
+            filt = np.random.randn(f,f,c,n_f)                     # size = ( f , f , c , n_f)
+            b = np.random.randn(1,1,1,n_f)
+            self.filter = filt
+            self.b = b
+        else:
+            filt = self.filter
+            b = self.b
         
         if(padding == 'same'):
             p = int((h*(stride - 1) - stride + f)/2)
@@ -57,15 +63,14 @@ class CNN:
                         c_filt = filt[:,:,:,filter_no]
                         c_b = b[:,:,:,filter_no]
                         output_X[i,height,width,filter_no] = np.sum(np.multiply(img_,c_filt)) + float(c_b)
-            
-        self.filter = filt
-        self.b = b
         
-        print("Input shape = {} Filter shape = {} Output shape = {}".format(self.X.shape,filt.shape,output_X.shape))
+        print("Input shape = {} Filter shape = {} Output shape = {}".format((m,h,w,c),filt.shape,output_X.shape))
+
+        self.ep = self.ep + 1
         return output_X
     
     
-    def Backward_pass(self,dl_do,lr = 0.001):
+    def Backward_pass(self,input_X,dl_do,lr = 0.001):
         
         filt = self.filter
         b = self.b
@@ -73,7 +78,6 @@ class CNN:
         stride = self.stride
         n_f = self.n_f 
         f = self.f
-        input_X = self.X
         
         (m,h,w,c) = input_X.shape                                 # size = ( m , h , w , c)
         
@@ -114,7 +118,7 @@ class CNN:
             filt = filt - lr*dl_df
             b = b - lr*db
             
-            self.filt = filt
+            self.filter = filt
             self.b = b
             
         print("Backprop input = {}  Backprop output = {}".format(dl_do.shape,dl_dx.shape))

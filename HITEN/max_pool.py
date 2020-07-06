@@ -17,13 +17,11 @@ class max_pool:
         self.mode = mode
         self.stride = stride
         self.f = f
-        self.X = None
         
     def Forward_pass(self,input_X):
         
         mode = self.mode
         stride = self.stride
-        self.X = input_X
         f = self.f
         
         (m,h,w,c) = input_X.shape                                 # size = ( m , h , w , c)
@@ -44,14 +42,13 @@ class max_pool:
                         elif mode == "average":
                             output_X[i, height, width, channel] = np.mean(img)
         
-        print("Input shape = {} Output shape = {}".format(self.X.shape,output_X.shape))
+        print("Input shape = {} Output shape = {}".format(input_X.shape,output_X.shape))
         return output_X
     
-    def Backward_pass(self,dl_do):
+    def Backward_pass(self,input_X,dl_do):
         
         mode = self.mode
         stride = self.stride
-        input_X = self.X
         f = self.f
         
         (m,h,w,c) = input_X.shape                                 # size = ( m , h , w , c)
