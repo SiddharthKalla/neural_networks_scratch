@@ -39,15 +39,15 @@ class NeuralNetwork:
         
         z1 = np.dot(x,W1) + b1
         a1 = np.tanh(z1) 
-        #print("Input shape = {} Output shape = {}".format(x.shape,a1.shape))
+        print("Input shape = {} Output shape = {}".format(x.shape,a1.shape))
         
         z2 = np.dot(a1,W2) + b2
         a2 = np.tanh(z2)
-        #print("Input shape = {} Output shape = {}".format(a1.shape,a2.shape))
+        print("Input shape = {} Output shape = {}".format(a1.shape,a2.shape))
         
         z3 = np.dot(a2,W3) + b3
         y_ = softmax(z3)
-        #print("Input shape = {} Output shape = {}".format(a2.shape,y_.shape))
+        print("Input shape = {} Output shape = {}".format(a2.shape,y_.shape))
         
         self.x = x
         self.activation_outputs = (a1,a2,y_)

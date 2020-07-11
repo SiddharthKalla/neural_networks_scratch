@@ -30,10 +30,10 @@ class CNN:
         f = self.f                                                # size of Filter 
         ep = self.ep
         
-        (m,c,h,w) = input_X.shape                                 # size = ( m , h , w , c)
+        (m,h,w,c) = input_X.shape                                 # size = ( m , h , w , c)
         if(ep==0):
-            filt = np.random.randn(n_f,c,f,f)                     # size = ( f , f , c , n_f)
-            b = np.random.randn(n_f,1,1,1)
+            filt = np.random.randn(f,f,c,n_f)                     # size = ( f , f , c , n_f)
+            b = np.random.randn(1,1,1,n_f)
             self.filter = filt
             self.b = b
         else:
@@ -43,37 +43,34 @@ class CNN:
         if(padding == 'same'):
             p = int((h*(stride - 1) - stride + f)/2)
 
-            input_X = np.pad(input_X , ((0,0),(0,0),(p,p),(p,p)) , 'constant', constant_values=0)
+            input_X = np.pad(input_X , ((0,0),(p,p),(p,p),(0,0)) , 'constant', constant_values=0)
         else: 
             p = 0
 
         o_h = int((h-f+2*p)/stride) + 1
         o_w = int((w-f+2*p)/stride) + 1
 
-        output_X = np.zeros((m,n_f,o_h,o_w))
+        output_X = np.zeros((m,o_h,o_w,n_f))
         
         for i in range(m):
             img = input_X[i]
             
-            for filter_no in range(n_f):
-                
-                c_filt = filt[filter_no]
-                c_b = b[filter_no]
-                
-                for height in range(o_h):
-                    for width in range(o_w):
-                    
-                        img_ = img[:,(height*stride):(height*stride)+f,(width*stride):(width*stride)+f]
-
-                        output_X[i,filter_no,height,width] = np.sum(np.multiply(img_,c_filt)) + float(c_b)
+            for height in range(o_h):
+                for width in range(o_w):
+                    for filter_no in range(n_f):
+                        
+                        img_ = img[(height*stride):(height*stride)+f,(width*stride):(width*stride)+f,:]
+                        c_filt = filt[:,:,:,filter_no]
+                        c_b = b[:,:,:,filter_no]
+                        output_X[i,height,width,filter_no] = np.sum(np.multiply(img_,c_filt)) + float(c_b)
         
-        if(ep==0): print("Input shape = {} Filter shape = {} Output shape = {}".format((m,c,h,w),filt.shape,output_X.shape))
+        print("Input shape = {} Filter shape = {} Output shape = {}".format((m,h,w,c),filt.shape,output_X.shape))
 
         self.ep = self.ep + 1
         return output_X
     
     
-    def Backward_pass(self,input_X,dl_do,lr = 0.0001):
+    def Backward_pass(self,input_X,dl_do,lr = 0.001):
         
         filt = self.filter
         b = self.b
@@ -82,7 +79,7 @@ class CNN:
         n_f = self.n_f 
         f = self.f
         
-        (m,c,h,w) = input_X.shape                                 # size = ( m , h , w , c)
+        (m,h,w,c) = input_X.shape                                 # size = ( m , h , w , c)
         
         dl_df = np.zeros(filt.shape)
         dl_dx = np.zeros(input_X.shape)
@@ -91,8 +88,8 @@ class CNN:
         if(self.padding == 'same'):
             p = int((h*(stride - 1) - stride + f)/2)
 
-            input_X_pad = np.pad(input_X , ((0,0),(0,0),(p,p),(p,p)))
-            dl_dx_pad = np.pad(dl_dx , ((0,0),(0,0),(p,p),(p,p)))
+            input_X_pad = np.pad(input_X , ((0,0),(p,p),(p,p),(0,0)))
+            dl_dx_pad = np.pad(dl_dx , ((0,0),(p,p),(p,p),(0,0)))
         else: 
             p=0
             input_X_pad = input_X
@@ -105,24 +102,26 @@ class CNN:
             img = input_X_pad[i]
             dl_dx_img = dl_dx_pad[i]
             
-            for filter_no in range(n_f):
-                for height in range(o_h):
-                    for width in range(o_w):
+            for height in range(o_h):
+                for width in range(o_w):
+                    for filter_no in range(n_f):
                         
-                        img_ = img[:,(height*stride):(height*stride)+f,(width*stride):(width*stride)+f]
+                        img_ = img[(height*stride):(height*stride)+f,(width*stride):(width*stride)+f,:]
                         
-                        dl_dx_img[:,(height*stride):(height*stride)+f,(width*stride):(width*stride)+f] += filt[filter_no,:,:,:] * dl_do[i,filter_no, height, width]
-                        dl_df[filter_no,:,:,:] += img_ * dl_do[i, filter_no , height, width]
-                        db[filter_no,:,:,:] += dl_do[i, filter_no, height, width]
+                        dl_dx_img[(height*stride):(height*stride)+f,(width*stride):(width*stride)+f,:] += filt[:,:,:,filter_no] * dl_do[i, height, width, filter_no]
+                        dl_df[:,:,:,filter_no] += img_ * dl_do[i, height, width, filter_no]
+                        db[:,:,:,filter_no] += dl_do[i, height, width, filter_no]
                         
-            if(p!=0): dl_dx[i, :, :, :] = dl_dx_img[:,p:-p, p:-p]
+            if(p!=0): dl_dx[i, :, :, :] = dl_dx_img[p:-p, p:-p, :]
             else: dl_dx[i, :, :, :] = dl_dx_img[:, :, :]
             
-            self.filter = self.filter - lr*dl_df
-            self.b = self.b - lr*db
+            filt = filt - lr*dl_df
+            b = b - lr*db
             
+            self.filter = filt
+            self.b = b
             
-        #print("Backprop input = {}  Backprop output = {}".format(dl_do.shape,dl_dx.shape))
+        print("Backprop input = {}  Backprop output = {}".format(dl_do.shape,dl_dx.shape))
         return dl_dx
     
 
