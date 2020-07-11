@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[26]:
 
 
 import numpy as np
 
 
-# In[626]:
+# In[77]:
 
 
 class CNN:
@@ -42,7 +42,7 @@ class CNN:
         
         if(padding == 'same'):
             p = int((h*(stride - 1) - stride + f)/2)
-
+            
             input_X = np.pad(input_X , ((0,0),(p,p),(p,p),(0,0)) , 'constant', constant_values=0)
         else: 
             p = 0
@@ -97,32 +97,33 @@ class CNN:
             
         o_h = int((h-f+2*p)/stride) + 1
         o_w = int((w-f+2*p)/stride) + 1
+        print(p)
         
         for i in range(m):
-            img = input_X_pad[i]
-            dl_dx_img = dl_dx_pad[i]
+            img = input_X_pad[i,:,:,:]
+            dl_dx_img = dl_dx_pad[i,:,:,:]
             
             for height in range(o_h):
                 for width in range(o_w):
                     for filter_no in range(n_f):
-                        
+                    
                         img_ = img[(height*stride):(height*stride)+f,(width*stride):(width*stride)+f,:]
                         
-                        dl_dx_img[(height*stride):(height*stride)+f,(width*stride):(width*stride)+f,:] += filt[:,:,:,filter_no] * dl_do[i, height, width, filter_no]
+                        dl_dx_img[(height*stride):(height*stride)+f,(width*stride):(width*stride)+f,:] += (filt[:,:,:,filter_no] * dl_do[i, height, width, filter_no])
                         dl_df[:,:,:,filter_no] += img_ * dl_do[i, height, width, filter_no]
                         db[:,:,:,filter_no] += dl_do[i, height, width, filter_no]
                         
             if(p!=0): dl_dx[i, :, :, :] = dl_dx_img[p:-p, p:-p, :]
             else: dl_dx[i, :, :, :] = dl_dx_img[:, :, :]
             
-            filt = filt - lr*dl_df
-            b = b - lr*db
+        filt = filt - lr*dl_df
+        b = b - lr*db
             
-            self.filter = filt
-            self.b = b
+        self.filter = filt
+        self.b = b
             
         print("Backprop input = {}  Backprop output = {}".format(dl_do.shape,dl_dx.shape))
-        return dl_dx
+        return dl_dx,dl_df,db
     
 
 

@@ -7,7 +7,7 @@
 import numpy as np
 
 
-# In[42]:
+# In[3]:
 
 
 class max_pool:
